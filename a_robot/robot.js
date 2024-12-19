@@ -1,6 +1,5 @@
 // This is the "Village" so to speak, and it simulates a delivery robot moving 
 // between locations to deliver parcels to their destinations.
-
 class VillageState {
     constructor(place, parcels) {
         this.place = place; // Current location of the robot
@@ -39,7 +38,7 @@ const roads = [
 
 // Converts an array of roads into a graph object for easy lookup of connections
 function buildGraph(edges) {
-    let graph = Object.create(null); // Create an empty graph object
+    let graph = Object.create(null);
 
     // Adds a connection between two locations
     function addEdge(from, to) {
@@ -78,14 +77,16 @@ function runRobot(state, robot, memory) {
 
 // Selects a random element from an array
 function randomPick(array) {
-    let choice = Math.floor(Math.random() * array.length); // Pick a random index
+    let choice = Math.floor(Math.random() * array.length);
     return array[choice];
 }
 
 // A robot that moves randomly between connected locations
-function randomRobot(state) {
-    return { direction: randomPick(roadGraph[state.place]) }; // Choose a random direction
-}
+// function randomRobot(state) {
+//     return { direction: randomPick(roadGraph[state.place]) };
+// }
+
+
 
 // Creates a random initial state with a specified number of parcels
 VillageState.random = function(parcelCount = 5) {
