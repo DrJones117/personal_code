@@ -81,12 +81,33 @@ function randomPick(array) {
     return array[choice];
 }
 
-// A robot that moves randomly between connected locations
-// function randomRobot(state) {
-//     return { direction: randomPick(roadGraph[state.place]) };
-// }
 
+// This function grows the route from the starting position in order to find the shortest possible route.
+function findRoute(graph, from, to) {
+    let work = [{at: from, route: []}];
+    for (let i = 0; i < work.length; i++) {
+        let {at, route} = work[i];
+        for (let place of graph[at]) {
+            if (place == to) return route.concat(place);
+            if(!work.some(w => w.at == place)) {
+                work.push({at: place, route: route.concat(place)});
+            }
+        }
+    }
+}
 
+// More efficient robot
+function goalOrientedRobot ({place, parcels}, route) {
+    if (route.length == 0) {
+        let parcel = parcels[0];
+        if (parcel.place != place) {
+            route = findRoute(roadGraph, place, parcel.place);
+        } else {
+            route = findRoute(roadGraph, place, parcel.address);
+        }
+    }
+    return {direction: route[0], memory: route.slice(1)};
+}
 
 // Creates a random initial state with a specified number of parcels
 VillageState.random = function(parcelCount = 5) {
@@ -105,4 +126,4 @@ VillageState.random = function(parcelCount = 5) {
     return new VillageState("Post Office", parcels);
 };
 
-runRobot(VillageState.random(),randomRobot);
+runRobot(VillageState.random(),goalOrientedRobot, []);
