@@ -1,1 +1,1 @@
-Just a little robot mail delivery program.
+Just a little robot mail delivery program. Keeping JavaScript skills fresh.
