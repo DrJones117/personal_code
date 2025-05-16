@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "AiImageRecognition/1.0.0": {
+        "runtime": {
+          "AiImageRecognition.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "AiImageRecognition/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
