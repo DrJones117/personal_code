@@ -13,3 +13,4 @@ C:\personal_code\AiImageRecognition\obj\Debug\net8.0\refint\AiImageRecognition.d
 C:\personal_code\AiImageRecognition\obj\Debug\net8.0\AiImageRecognition.pdb
 C:\personal_code\AiImageRecognition\obj\Debug\net8.0\AiImageRecognition.genruntimeconfig.cache
 C:\personal_code\AiImageRecognition\obj\Debug\net8.0\ref\AiImageRecognition.dll
+C:\personal_code\AiImageRecognition\obj\Debug\net8.0\AiImageRecognition.csproj.AssemblyReference.cache
