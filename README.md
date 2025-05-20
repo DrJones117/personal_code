@@ -1,1 +1,1 @@
-This is a folder for my small personal projects. Usually to learn a new framework or the like.
+This is a folder for my small personal projects. Usually to learn a new framework or language. And to try out different ideas on a smaller scale before making full scale projects. Like a thumbnail sketch!
