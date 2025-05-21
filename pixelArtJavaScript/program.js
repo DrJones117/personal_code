@@ -18,7 +18,6 @@ class Picture {
         }
         return new Picture(this.width, this.height, copy);
     }
-
 }
 
 const scale = 10;
@@ -62,6 +61,132 @@ class PixelEditor {
         for (let control of this.controls) {
             control.syncState(state);
         }
+    }
+}
+
+class ToolSelect {
+    constructor(state,  {tools, dispatch}) {
+        this.select = elt("select",  {
+            onchange: () => dispatch({tool: this.select.value})
+        }, ...Object.keys(tools).map(name => elt("option", {
+            selected: name == state.tool
+        }, name)));
+        this.dom = elt("label", null, "Tool: ", this.select);
+    }
+    syncState(state) {
+        this.select.value = state.tool;
+    }
+}
+
+class ColorSelect {
+    constructor(state, {dispatch}) {
+        this.input = elt("input", {
+            type: "color",
+            value: state.color, 
+            onchange: () => dispatch({color: this.input.value})
+        });
+        this.dom = elt("label", null, "Color!: ", this.input);
+    }
+    syncState(state) {
+        this.select.value = state.color;
+    }
+}
+
+class SaveButton {
+    constructor(state, dispatch) {
+        this.picture = state.picture;
+        this.dom = elt("button", {
+            onclick: () => this.save()
+        }, "SAVE");
+    }
+    save() {
+        let canvas = elt("canvas");
+        drawPicture(this.picture, canvas, 1);
+        let link = elt("a", {
+            href: canvas.toDataURL(),
+            download: "pixelart.png"
+        });
+        document.body.appendChild(link);
+        link.clink();
+        link.remove();
+    }
+    syncState(state) { this.picture = state.picture}
+}
+
+class LoadButton {
+    constructor(_, {dispatch}) {
+        this.dom = elt("button", {
+            onclick: () => startLoad(dispatch)
+        }, "LOAD IMAGE")
+    }
+    syncState() {}
+}
+
+class UndoButton {
+    constructor(state, {dispatch}) {
+        this.dom = wlt("button", {
+            onclick: () => dispatch({undo: true}),
+            disabled: state.done.length == 0
+        }, "UNDO")
+    }
+    syncState(state) {
+        this.dom.disabled = state.done.length = 0;
+    }
+}
+
+function startLoad(dispatch) {
+    let input = elt("input", {
+        type: "file", 
+        onchange: () => finishLoad(input.files[0], dispatch)
+    });
+    document.body.appendChild(input);
+    input.click();
+    input.remove();
+}
+
+function finishLoad(file, dispatch) {
+    if (file ==  null) return;
+    let reader = new FileReader();
+    reader.addEventListener("load", () => {
+        let image = elt("img", {
+            onload: () => dispatch({
+                picture: pictureFromImage(image)
+            }),
+            src: reader.result
+        });
+    });
+    reader.readAsDataURL(file);
+}
+
+function pictureFromImage(image) {
+    let width = Math.min(100, image.width);
+    let height = Math.min(100, image.height);
+    let canvas = elt("canvas", {width, height});
+    let cx = canvas.getContext("2d");
+    cx.drawImage(image, 0, 0);
+    let pixels = [];
+    let {data} = cx.getImageData(0, 0, width, height);
+
+    function hex(n) {
+        return n.toString(16).padStart(2, "0");
+    }
+
+    for (let i = 0; i < data.length; i += 4) {
+        let [r, g, b] = data.slice(i, i + 3);
+        pixels.push("#" + hex(r) + hex(g) + hex(b));
+    }
+    return new Picture(width, height,)
+}
+
+function historyUpdateState(state, action) {
+    if (action.undo == true) {
+        if (state.done.length == 0) return state;
+        return Object.assign({}, state, action, {
+            done: [state.picture, ...state.done],
+            doneAt: Date.now()
+        });
+    } else {
+        return Object.assign({}, state, action);
     }
 }
 
@@ -137,3 +262,70 @@ function drawPicture(picture, canvas, scale) {
         };
     };
 };
+
+function draw(pos, state, dispatch) {
+    function drawRectangle({x, y}, state) {
+        let xStart = Math.min(start.x, pos.x);
+        let yStart = Math.min(start.y, pos.y);
+        let xEnd = Math.max(start.x, pos.x);
+        let yENd = Math.max(start.y, pos.y);
+        let drawn = {};
+        for (let y =yStart; y <= yEnd; y++) {
+            for (let x = xStart; x <= xEnd; x++) {
+                drawn.push({x, y, color: state.color});
+            }
+        }
+        dispatch({picture: state.picture.draw(drawn)});
+    }
+    drawRectangle(start);
+    return drawRectangle;
+}
+
+const around = [{dx: -1, dy: 0}, {dx: 1, dy: 0}, 
+                {dx: 0, dy: -1}, {dx: 0, dy: 1}];
+
+function fill({x, y}, state, dispatch) {
+    let targetColor = state.picture.pixel(x, y);
+    let drawn = [{x, y, color: state.color}];
+    for (let done = 0; done < drawn.length; done++) {
+        for (let {ddx, dy} of around) {
+            let x = drawn[done].x + dx, y = drawn[done].y + dy;
+            if (x >= 0 && x < state.picture.width &&
+                y >= 0 && y < state.picture.height &&
+                state.picture.pixel (x, y) == targetColor &&
+                !drawn.some(p => p.x == x && p.y == y)) {
+                drawn.push({x, y, color: state.color});
+                }
+            }
+        }
+    dispatch({picture: state.picture.draw(drawn)});
+}
+
+function pick(pos, state, dispatch) {
+    dispatch({color: state.picture.pixel(pos.x, pos.y)});
+}
+
+const startState = {
+    tool: "draw",
+    color: "#000000",
+    picture: Picture.empty(60, 30, "#f0f0f0"),
+    done: [],
+    doneAt: 0
+};
+
+const baseTools = {draw, fill, rectangle, pick};
+
+const baseControls = [
+    ToolSelect, ColorSelect, SaveButton, LoadButton, UndoButton
+];
+
+function startPixelEditor({state = startState, tools= baseTools, controls = baseControls}) {
+    let app = new PixelEditor(state, {
+        tools,
+        controls,
+        dispatch(action) {
+            state = historyUpdateState(state, action);
+        }
+    });
+    return app.dom;
+}
