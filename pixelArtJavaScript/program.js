@@ -54,6 +54,8 @@ function elt(type, props, ...children) {
 // ====== The Canvas ==================================================
 
 
+// Defines how large our pixels will be. 
+// (In this case 10 pixels x 10 pixels)
 const scale = 10;
 
 class PictureCanvas {
