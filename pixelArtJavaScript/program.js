@@ -1,4 +1,4 @@
-// ====== The State =========================================================
+// ====== The State ==================================================
 
 
 // Represents the area in which the user can draw.
@@ -34,7 +34,24 @@ function updateState(state, action) {
 };
 
 
-// ==========================================================================
+// ====== The DOM (Document, Object, Model) ==================================================
+
+
+// Creates a DOM element of the given type, assigns the given properties to it, 
+// and appends the given children to it (elements and text nodes)
+function elt(type, props, ...children) {
+    let dom = document.createElement(type);
+    if (props) Object.assign(dom, props);
+
+    for (let child of children) {
+        if (typeof child != "string") dom.appendChild(child);
+        else dom.appendChild(document.createTextNode(child));
+    }
+    return dom;
+};
+
+
+// ====== The Canvas ==================================================
 
 
 const scale = 10;
@@ -250,17 +267,6 @@ function pointerPosition(pos, domNode) {
         x: Math.floor((pos.clientX - rect.left) / scale),
         y: Math.floor((pos.clientY - rect.top) / scale)
     };
-};
-
-function elt(type, props, ...children) {
-    let dom = document.createElement(type);
-    if (props) Object.assign(dom, props);
-
-    for (let child of children) {
-        if (typeof child != "string") dom.appendChild(child);
-        else dom.appendChild(document.createTextNode(child));
-    }
-    return dom;
 };
 
 function drawPicture(picture, canvas, scale) {
