@@ -1,16 +1,24 @@
+// ====== The State =========================================================
+
+
+// Represents the area in which the user can draw.
 class Picture {
+    // Defines the attributes of the Picture.
     constructor(width, height, pixels) {
         this.width = width;
         this.height = height;
         this.pixels = pixels;
     }
+    // Creates an array representing the pixels and applys the starting color (grey).
     static empty(width, height, color) {
         let pixels = new Array(width * height).fill(color);
         return new Picture(width, height, pixels);
     }
+    // Finds the color of the pixel stored at the calculated index (x, y)
     pixel(x, y) {
         return this.pixels[x + y * this.width];
     }
+    // Returns a new Picture, but with updated pixel data as the user draws.
     draw(pixels) {
         let copy = this.pixels.slice();
         for (let {x, y, color} of pixels) {
@@ -19,6 +27,15 @@ class Picture {
         return new Picture(this.width, this.height, copy);
     }
 }
+
+// Returns a new state object, merging the current state and the changes from the action.
+function updateState(state, action) {
+    return Object.assign({}, state, action);
+};
+
+
+// ==========================================================================
+
 
 const scale = 10;
 
@@ -233,10 +250,6 @@ function pointerPosition(pos, domNode) {
         x: Math.floor((pos.clientX - rect.left) / scale),
         y: Math.floor((pos.clientY - rect.top) / scale)
     };
-};
-
-function updateState(state, action) {
-    return Object.assign({}, state, action);
 };
 
 function elt(type, props, ...children) {
