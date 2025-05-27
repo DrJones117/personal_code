@@ -88,7 +88,7 @@ class ColorSelect {
         this.dom = elt("label", null, "Color!: ", this.input);
     }
     syncState(state) {
-        this.select.value = state.color;
+        this.input.value = state.color;
     }
 }
 
@@ -107,7 +107,7 @@ class SaveButton {
             download: "pixelart.png"
         });
         document.body.appendChild(link);
-        link.clink();
+        link.click();
         link.remove();
     }
     syncState(state) { this.picture = state.picture}
@@ -124,13 +124,13 @@ class LoadButton {
 
 class UndoButton {
     constructor(state, {dispatch}) {
-        this.dom = wlt("button", {
+        this.dom = elt("button", {
             onclick: () => dispatch({undo: true}),
             disabled: state.done.length == 0
         }, "UNDO")
     }
     syncState(state) {
-        this.dom.disabled = state.done.length = 0;
+        this.dom.disabled = state.done.length == 0;
     }
 }
 
@@ -175,7 +175,7 @@ function pictureFromImage(image) {
         let [r, g, b] = data.slice(i, i + 3);
         pixels.push("#" + hex(r) + hex(g) + hex(b));
     }
-    return new Picture(width, height,)
+    return new Picture(width, height, pixels)
 }
 
 function historyUpdateState(state, action) {
@@ -264,12 +264,21 @@ function drawPicture(picture, canvas, scale) {
 };
 
 function draw(pos, state, dispatch) {
-    function drawRectangle({x, y}, state) {
+    function drawPixel({x, y}, state) {
+        let drawn = {x, y, color: state.color};
+        dispatch({picture: state.picture.draw([drawn])});
+    }
+    drawPixel(pos, state);
+    return drawPixel;
+}
+
+function rectangle(start, state, dispatch) {
+    function drawRectangle(pos) {
         let xStart = Math.min(start.x, pos.x);
         let yStart = Math.min(start.y, pos.y);
         let xEnd = Math.max(start.x, pos.x);
-        let yENd = Math.max(start.y, pos.y);
-        let drawn = {};
+        let yEnd = Math.max(start.y, pos.y);
+        let drawn = [];
         for (let y =yStart; y <= yEnd; y++) {
             for (let x = xStart; x <= xEnd; x++) {
                 drawn.push({x, y, color: state.color});
@@ -288,7 +297,7 @@ function fill({x, y}, state, dispatch) {
     let targetColor = state.picture.pixel(x, y);
     let drawn = [{x, y, color: state.color}];
     for (let done = 0; done < drawn.length; done++) {
-        for (let {ddx, dy} of around) {
+        for (let {dx, dy} of around) {
             let x = drawn[done].x + dx, y = drawn[done].y + dy;
             if (x >= 0 && x < state.picture.width &&
                 y >= 0 && y < state.picture.height &&
@@ -325,6 +334,7 @@ function startPixelEditor({state = startState, tools= baseTools, controls = base
         controls,
         dispatch(action) {
             state = historyUpdateState(state, action);
+            app.syncState(state);
         }
     });
     return app.dom;

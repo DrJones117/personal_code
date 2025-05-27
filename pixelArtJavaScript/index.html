@@ -5,12 +5,8 @@
     <title>pixelArtJavaScript</title>
 </head>
 <body>
-    <script>
-        document.body.appendChild(elt("button", {
-            onclick: () => console.log("click")
-        }, "The button"));
-    </script>
-    <div></div>
+    <div id = "app"></div>
+    <script src="program.js"></script>
     <script>
         document.querySelector("div").appendChild(startPixelEditor({}));
     </script>
