@@ -139,21 +139,19 @@ PictureCanvas.prototype.touch = function (startEvent, onDown) {
     this.dom.addEventListener("touchend", end);
 };
 
-function draw(pos, state, dispatch) {
-    function drawPixel({x, y}, state) {
-        let drawn = {x, y, color: state.color};
-        dispatch({picture: state.picture.draw([drawn])});
-    }
-    drawPixel(pos, state);
-    return drawPixel;
-}
+
+// ====== The Application ==================================================
+
+
+// This is the container in which all of the components go into.
+// It holds the canvas, tools, and updates the state and UI.
 class PixelEditor {
     constructor(state, config) {
         let {tools, controls, dispatch} = config;
         this.state = state;
 
         this.canvas = new PictureCanvas(state.picture, pos => {
-            let tool = tools[state.tool];
+            let tool = tools[this.state.tool];
             let onMove = tool(pos, this.state, dispatch);
             if (onMove) {
                 return pos => onMove(pos, this.state);
@@ -168,12 +166,15 @@ class PixelEditor {
     syncState(state) {
         this.state = state;
         this.canvas.syncState(state.picture);
-        for (let control of this.controls) {
-            control.syncState(state);
+        for (let ctrl of this.controls) {
+            ctrl.syncState(state);
         }
     }
 }
 
+
+// Creates a dropdown select menu listing the available tools.
+// Updates the state to reflect the tool the user has chosen.
 class ToolSelect {
     constructor(state,  {tools, dispatch}) {
         this.select = elt("select",  {
@@ -188,6 +189,9 @@ class ToolSelect {
     }
 }
 
+
+// Creates an element using the browser's built in color picker.
+// Updates the state to reflect the chosen color.
 class ColorSelect {
     constructor(state, {dispatch}) {
         this.input = elt("input", {
@@ -201,6 +205,81 @@ class ColorSelect {
         this.input.value = state.color;
     }
 }
+
+
+// ====== The Drawing Tools ==================================================
+
+
+// This is where the a pixel the user clicks actually changes.
+// Dispatch and action to update the pictuer with the new data.
+function draw(pos, state, dispatch) {
+    function drawPixel({x, y}, state) {
+        let drawn = {x, y, color: state.color};
+        dispatch({picture: state.picture.draw([drawn])});
+    }
+    drawPixel(pos, state);
+    return drawPixel;
+}
+
+
+// Allows the user to click and drag to select a rectangular area of pixels.
+// Pushes each pixel and the color into an array that fills out the rectangle area.
+function rectangle(start, state, dispatch) {
+    function drawRectangle(pos) {
+        let xStart = Math.min(start.x, pos.x);
+        let yStart = Math.min(start.y, pos.y);
+        let xEnd = Math.max(start.x, pos.x);
+        let yEnd = Math.max(start.y, pos.y);
+        let drawn = [];
+        for (let y = yStart; y <= yEnd; y++) {
+            for (let x = xStart; x <= xEnd; x++) {
+                drawn.push({x, y, color: state.color});
+            }
+        }
+        dispatch({picture: state.picture.draw(drawn)});
+    }
+    drawRectangle(start);
+    return drawRectangle;
+}
+
+
+// Defines the four directions adjacent to a given pixel.
+const around = [
+    {dx: -1, dy: 0}, // left
+    {dx: 1, dy: 0}, // right
+    {dx: 0, dy: -1}, // up
+    {dx: 0, dy: 1} // down
+];
+
+
+// Calculates all of the pixels in one area of the same color and adds them to an array.
+// Changes all of the array's pixels to the selected color.
+function fill({x, y}, state, dispatch) {
+    let targetColor = state.picture.pixel(x, y);
+    let drawn = [{x, y, color: state.color}];
+    for (let done = 0; done < drawn.length; done++) {
+        for (let {dx, dy} of around) { // Here's where we use the directions defined by the "around" variable.
+            let x = drawn[done].x + dx, y = drawn[done].y + dy;
+            if (x >= 0 && x < state.picture.width &&
+                y >= 0 && y < state.picture.height &&
+                state.picture.pixel (x, y) == targetColor &&
+                !drawn.some(p => p.x == x && p.y == y)) {
+                drawn.push({x, y, color: state.color});
+                }
+            }
+        }
+    dispatch({picture: state.picture.draw(drawn)});
+}
+
+
+// Simply changes the selected color to that of a pixel that has been selected.
+// An eyedropper tool.
+function pick(pos, state, dispatch) {
+    dispatch({color: state.picture.pixel(pos.x, pos.y)});
+}
+
+
+// ====== Saving and Loading ==================================================
 
 class SaveButton {
     constructor(state, dispatch) {
@@ -298,48 +377,6 @@ function historyUpdateState(state, action) {
     } else {
         return Object.assign({}, state, action);
     }
-}
-
-function rectangle(start, state, dispatch) {
-    function drawRectangle(pos) {
-        let xStart = Math.min(start.x, pos.x);
-        let yStart = Math.min(start.y, pos.y);
-        let xEnd = Math.max(start.x, pos.x);
-        let yEnd = Math.max(start.y, pos.y);
-        let drawn = [];
-        for (let y =yStart; y <= yEnd; y++) {
-            for (let x = xStart; x <= xEnd; x++) {
-                drawn.push({x, y, color: state.color});
-            }
-        }
-        dispatch({picture: state.picture.draw(drawn)});
-    }
-    drawRectangle(start);
-    return drawRectangle;
-}
-
-const around = [{dx: -1, dy: 0}, {dx: 1, dy: 0}, 
-                {dx: 0, dy: -1}, {dx: 0, dy: 1}];
-
-function fill({x, y}, state, dispatch) {
-    let targetColor = state.picture.pixel(x, y);
-    let drawn = [{x, y, color: state.color}];
-    for (let done = 0; done < drawn.length; done++) {
-        for (let {dx, dy} of around) {
-            let x = drawn[done].x + dx, y = drawn[done].y + dy;
-            if (x >= 0 && x < state.picture.width &&
-                y >= 0 && y < state.picture.height &&
-                state.picture.pixel (x, y) == targetColor &&
-                !drawn.some(p => p.x == x && p.y == y)) {
-                drawn.push({x, y, color: state.color});
-                }
-            }
-        }
-    dispatch({picture: state.picture.draw(drawn)});
-}
-
-function pick(pos, state, dispatch) {
-    dispatch({color: state.picture.pixel(pos.x, pos.y)});
 }
 
 const startState = {
