@@ -58,6 +58,8 @@ function elt(type, props, ...children) {
 // (In this case 10 pixels x 10 pixels)
 const scale = 10;
 
+// Responsible for creating the canvas and redraws the canvas whenever it changes.
+// Sets up the user input for the canvas.
 class PictureCanvas {
     constructor(picture, pointerDown) {
         this.dom = elt("canvas", {
@@ -73,6 +75,78 @@ class PictureCanvas {
     }
 }
 
+// Renders the changes to the Picture to visually reflect the pixel data
+function drawPicture(picture, canvas, scale) {
+    canvas.width = picture.width * scale;
+    canvas.height = picture.height * scale;
+    let cx = canvas.getContext("2d");
+
+    for (let y = 0; y < picture.height; y++) {
+        for (let x = 0; x < picture.width; x++) {
+            cx.fillStyle = picture.pixel(x, y);
+            cx.fillRect(x * scale, y * scale, scale, scale);
+        };
+    };
+}
+
+// Lets the user hold down left click in order to draw lines.
+// Checks whether or not the user is holding down left click and either removes or adds an eventListener.
+PictureCanvas.prototype.mouse = function(downEvent, onDown) {
+    if (downEvent.button != 0) return;
+    let pos = pointerPosition(downEvent, this.dom);
+    let onMove = onDown(pos);
+    if (!onMove) return;
+    let move = moveEvent => {
+        if (moveEvent.buttons == 0) {
+            this.dom.removeEventListener("mousemove", move);
+        } else {
+            let newPos = pointerPosition(moveEvent, this.dom);
+            if (newPos.x == pos.x && newPos.y == pos.y) return;
+            pos = newPos
+            onMove(newPos);
+        }
+    };
+    this.dom.addEventListener("mousemove", move);
+};
+
+// Calculates the position of the pixel where an event occurred.
+// (Were the user makes changes)
+function pointerPosition(pos, domNode) {
+    let rect = domNode.getBoundingClientRect();
+    return {
+        x: Math.floor((pos.clientX - rect.left) / scale),
+        y: Math.floor((pos.clientY - rect.top) / scale)
+    };
+};
+
+// Does the same thing as the "prototype.mouse", but for touch screens.
+PictureCanvas.prototype.touch = function (startEvent, onDown) {
+    let pos = pointerPosition(startEvent.touches[0], this.dom);
+    let onMove = onDown(pos);
+    startEvent.preventDefault();
+    if (!onMove) return;
+    let move = moveEvent => {
+        let newPos = pointerPosition(moveEvent.touches[0], this.dom);
+        if (newPos.x == pos.x && newPos.y == pos.y) return;
+        pos = newPos;
+        onMove(newPos);
+    };
+    let end = () => {
+        this.dom.removeEventListener("touchmove", move);
+        this.dom.removeEventListener("touchend", end);
+    };
+    this.dom.addEventListener("touchmove", move);
+    this.dom.addEventListener("touchend", end);
+};
+
+function draw(pos, state, dispatch) {
+    function drawPixel({x, y}, state) {
+        let drawn = {x, y, color: state.color};
+        dispatch({picture: state.picture.draw([drawn])});
+    }
+    drawPixel(pos, state);
+    return drawPixel;
+}
 class PixelEditor {
     constructor(state, config) {
         let {tools, controls, dispatch} = config;
@@ -224,73 +298,6 @@ function historyUpdateState(state, action) {
     } else {
         return Object.assign({}, state, action);
     }
-}
-
-PictureCanvas.prototype.mouse = function (downEvent, onDown) {
-    if (downEvent.button !=0) return;
-    let pos = pointerPosition(downEvent, this.dom);
-    let onMove = onDown(pos);
-    if (!onMove) return;
-    let move = moveEvent => {
-        if (moveEvent.buttons == 0) {
-            this.dom.removeEventListener("mousemove", move);
-        } else {
-            let newPos = pointerPosition(moveEvent, this.dom);
-            if (newPos.x == pos.x && newPos.y == pos.y) return;
-            pos = newPos
-            onMove(newPos);
-        }
-    };
-    this.dom.removeEventListener("mousemove", move);
-};
-
-PictureCanvas.prototype.touch = function (startEvent, onDown) {
-    let pos = pointerPosition(startEvent.touches[0], this.dom);
-    let onMove = onDown(pos);
-    startEvent.preventDefault();
-    if (!onMove) return;
-    let move = moveEvent => {
-        let newPos = pointerPosition(moveEvent.touches[0], this.dom);
-        if (newPos.x == pos.x && newPos.y == pos.y) return;
-        pos = newPos;
-        onMove(newPos);
-    };
-    let end = () => {
-        this.dom.removeEventListener("touchmove", move);
-        this.dom.removeEventListener("touchend", end);
-    };
-    this.dom.addEventListener("touchmove", move);
-    this.dom.addEventListener("touchend", end);
-};
-
-function pointerPosition(pos, domNode) {
-    let rect = domNode.getBoundingClientRect();
-    return {
-        x: Math.floor((pos.clientX - rect.left) / scale),
-        y: Math.floor((pos.clientY - rect.top) / scale)
-    };
-};
-
-function drawPicture(picture, canvas, scale) {
-    canvas.width = picture.width * scale;
-    canvas.height = picture.height * scale;
-    let cx = canvas.getContext("2d");
-
-    for (let y = 0; y < picture.height; y++) {
-        for (let x = 0; x < picture.width; x++) {
-            cx.fillStyle = picture.pixel(x, y);
-            cx.fillRect(x * scale, y * scale, scale, scale);
-        };
-    };
-};
-
-function draw(pos, state, dispatch) {
-    function drawPixel({x, y}, state) {
-        let drawn = {x, y, color: state.color};
-        dispatch({picture: state.picture.draw([drawn])});
-    }
-    drawPixel(pos, state);
-    return drawPixel;
 }
 
 function rectangle(start, state, dispatch) {
