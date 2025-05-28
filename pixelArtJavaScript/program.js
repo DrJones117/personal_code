@@ -273,7 +273,7 @@ function fill({x, y}, state, dispatch) {
 
 
 // Simply changes the selected color to that of a pixel that has been selected.
-// An eyedropper tool.
+// An eyedropper tool, essentially.
 function pick(pos, state, dispatch) {
     dispatch({color: state.picture.pixel(pos.x, pos.y)});
 }
@@ -281,8 +281,12 @@ function pick(pos, state, dispatch) {
 
 // ====== Saving and Loading ==================================================
 
+
+// Lets the user save their art to a PNG file.
+// Creates a temporary canvas and draws the picture onto it at a 1:1 scale.
+// Creates a download link with the image data and then clicks the link.
 class SaveButton {
-    constructor(state, dispatch) {
+    constructor(state) {
         this.picture = state.picture;
         this.dom = elt("button", {
             onclick: () => this.save()
@@ -302,6 +306,9 @@ class SaveButton {
     syncState(state) { this.picture = state.picture}
 }
 
+
+// Creates an element (Button) labeled "LOAD IMAGE".
+// Calls the startLoad function.
 class LoadButton {
     constructor(_, {dispatch}) {
         this.dom = elt("button", {
@@ -311,18 +318,10 @@ class LoadButton {
     syncState() {}
 }
 
-class UndoButton {
-    constructor(state, {dispatch}) {
-        this.dom = elt("button", {
-            onclick: () => dispatch({undo: true}),
-            disabled: state.done.length == 0
-        }, "UNDO")
-    }
-    syncState(state) {
-        this.dom.disabled = state.done.length == 0;
-    }
-}
 
+// Creates an file input and clicks it.
+// I do this because I wanted my LOAD IMAGE input to look like a button.
+// The button triggers the creation and clicking of the input.
 function startLoad(dispatch) {
     let input = elt("input", {
         type: "file", 
@@ -333,6 +332,10 @@ function startLoad(dispatch) {
     input.remove();
 }
 
+
+// Grabs the selected image.
+// Reads the file as a data URL and loads it into an image element.
+// Calls the pictureFromImage function.
 function finishLoad(file, dispatch) {
     if (file ==  null) return;
     let reader = new FileReader();
@@ -347,6 +350,9 @@ function finishLoad(file, dispatch) {
     reader.readAsDataURL(file);
 }
 
+
+// Creates a canvas and draws the loaded image onto it.
+// Grabs and converts the image data into usable information (Each pixels color as a hex string).
 function pictureFromImage(image) {
     let width = Math.min(100, image.width);
     let height = Math.min(100, image.height);
@@ -366,6 +372,23 @@ function pictureFromImage(image) {
     }
     return new Picture(width, height, pixels)
 }
+
+
+// ====== Undo History ==================================================
+class UndoButton {
+    constructor(state, {dispatch}) {
+        this.dom = elt("button", {
+            onclick: () => dispatch({undo: true}),
+            disabled: state.done.length == 0
+        }, "UNDO")
+    }
+    syncState(state) {
+        this.dom.disabled = state.done.length == 0;
+    }
+}
+
+
+
 
 function historyUpdateState(state, action) {
     if (action.undo == true) {
