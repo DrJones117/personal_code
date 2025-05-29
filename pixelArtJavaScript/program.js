@@ -419,21 +419,28 @@ class UndoButton {
 // ====== "Let's Dance!!!" ==================================================
 
 
-// 
+// Sets all of the default settings for the application.
 const startState = {
-    tool: "draw",
-    color: "#000000",
-    picture: Picture.empty(60, 30, "#f0f0f0"),
-    done: [],
-    doneAt: 0
+    tool: "draw", // Sets default tool to "draw".
+    color: "#000000", // Sets the default drawing color to black.
+    picture: Picture.empty(60, 30, "#f0f0f0"), // Sets the default background color of the canvas. (grey)
+    done: [], // Empty's the Undo history.
+    doneAt: 0 // Sets the last time of the last undoable undoable action.
 };
 
+
+// Sets up the list of tools for the user.
 const baseTools = {draw, fill, rectangle, pick};
 
+
+// Sets up the list of UI controls for the user.
 const baseControls = [
     ToolSelect, ColorSelect, SaveButton, LoadButton, UndoButton
 ];
 
+
+// Starts the PixelEditor's engine.
+// Hands all of the components to the PixelEditor class.
 function startPixelEditor({state = startState, tools= baseTools, controls = baseControls}) {
     let app = new PixelEditor(state, {
         tools,
