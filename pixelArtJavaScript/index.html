@@ -21,7 +21,11 @@
                     tools.value = "draw";
                     tools.dispatchEvent(new Event("change"));
                     event.preventDefault();
-                }
+                } else if (event.key == "2") {
+                    tools.value = "fill";
+                    tools.dispatchEvent(new Event("change"));
+                    event.preventDefault();
+                } 
             }
         )
     </script>
