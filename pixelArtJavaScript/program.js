@@ -70,21 +70,30 @@ class PictureCanvas {
     }
     syncState(picture) {
         if (this.picture == picture) return;
+
+        if (this.picture) {
+            drawPicture(picture, this.dom, scale, this.picture);
+        } else {
+            drawPicture(picture, this.dom, scale);
+        }
         this.picture = picture;
-        drawPicture(this.picture, this.dom, scale);
     }
 }
 
 // Renders the changes to the Picture to visually reflect the pixel data
-function drawPicture(picture, canvas, scale) {
+function drawPicture(picture, canvas, scale, previousPicture) {
     canvas.width = picture.width * scale;
     canvas.height = picture.height * scale;
     let cx = canvas.getContext("2d");
 
     for (let y = 0; y < picture.height; y++) {
         for (let x = 0; x < picture.width; x++) {
-            cx.fillStyle = picture.pixel(x, y);
-            cx.fillRect(x * scale, y * scale, scale, scale);
+            // The pixel will only be drawn if it is different from the previous picture.
+            // Before it would just redraw the entire picture.
+            if (!previousPicture || picture.pixel(x, y) !== previousPicture.pixel(x, y)) {
+                cx.fillStyle = picture.pixel(x, y);
+                cx.fillRect(x * scale, y * scale, scale, scale);
+            }
         };
     };
 }
