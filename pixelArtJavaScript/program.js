@@ -178,6 +178,7 @@ class PixelEditor {
 class ToolSelect {
     constructor(state,  {tools, dispatch}) {
         this.select = elt("select",  {
+            id: "tools",
             onchange: () => dispatch({tool: this.select.value})
         }, ...Object.keys(tools).map(name => elt("option", {
             selected: name == state.tool

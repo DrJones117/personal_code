@@ -11,12 +11,17 @@
         document.querySelector("div").appendChild(startPixelEditor({}));
 
         let app = document.getElementById("app");
-
+        let tools = document.getElementById("tools");
         app.addEventListener("keydown", 
             function (event) {
-                if (event.ctrlKey && event.key == "z")
-                document.getElementById("undo-button").click();
-                event.preventDefault();
+                if ((event.ctrlKey || event.metaKey) && event.key == "z") {
+                    document.getElementById("undo-button").click();
+                    event.preventDefault();
+                } else if (event.key == "1") {
+                    tools.value = "draw";
+                    tools.dispatchEvent(new Event("change"));
+                    event.preventDefault();
+                }
             }
         )
     </script>
