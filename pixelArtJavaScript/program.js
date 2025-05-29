@@ -375,6 +375,34 @@ function pictureFromImage(image) {
 
 
 // ====== Undo History ==================================================
+
+
+// Keeps track of the history of the picture.
+// It restores the last picture in history if theres are any.
+// If at least 1 second has passed in between changes, it adds the new picture to history.
+// Otherwise it updates the state with the current action.
+function historyUpdateState(state, action) {
+    if (action.undo == true) {
+        if (state.done.length == 0) return state;
+        return Object.assign({}, state, {
+            picture: state.done[0],
+            done: state.done.slice(1),
+            doneAt: 0
+        });
+    } else if (action.picture && 
+            state.doneAt < Date.now() - 1000) {
+        return Object.assign({}, state, action, {
+            done: [state.picture, ...state.done],
+            doneAt: Date.now()
+        });
+    } else {
+        return Object.assign({}, state, action);
+    }
+}
+
+
+// Creates an element (button) used to undo an action.
+// Disables itself when there is nothing to undo.
 class UndoButton {
     constructor(state, {dispatch}) {
         this.dom = elt("button", {
@@ -388,20 +416,10 @@ class UndoButton {
 }
 
 
+// ====== "Let's Dance!!!" ==================================================
 
 
-function historyUpdateState(state, action) {
-    if (action.undo == true) {
-        if (state.done.length == 0) return state;
-        return Object.assign({}, state, action, {
-            done: [state.picture, ...state.done],
-            doneAt: Date.now()
-        });
-    } else {
-        return Object.assign({}, state, action);
-    }
-}
-
+// 
 const startState = {
     tool: "draw",
     color: "#000000",
