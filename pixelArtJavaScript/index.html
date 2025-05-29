@@ -25,6 +25,10 @@
                     tools.value = "fill";
                     tools.dispatchEvent(new Event("change"));
                     event.preventDefault();
+                } else if (event.key == "3") {
+                    tools.value = "rectangle";
+                    tools.dispatchEvent(new Event("change"));
+                    event.preventDefault();
                 } 
             }
         )
