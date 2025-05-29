@@ -159,7 +159,7 @@ class PixelEditor {
         });
         this.controls = controls.map(
             Control => new Control(state, config));
-        this.dom = elt("div", {}, this.canvas.dom, elt("br"), 
+        this.dom = elt("div", {tabIndex: 0}, this.canvas.dom, elt("br"), 
                         ...this.controls.reduce(
                             (a, c) => a.concat(" ", c.dom), []));
     }
@@ -406,6 +406,7 @@ function historyUpdateState(state, action) {
 class UndoButton {
     constructor(state, {dispatch}) {
         this.dom = elt("button", {
+            id: "undo-button",
             onclick: () => dispatch({undo: true}),
             disabled: state.done.length == 0
         }, "UNDO")

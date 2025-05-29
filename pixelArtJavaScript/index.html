@@ -9,6 +9,16 @@
     <script src="program.js"></script>
     <script>
         document.querySelector("div").appendChild(startPixelEditor({}));
+
+        let app = document.getElementById("app");
+
+        app.addEventListener("keydown", 
+            function (event) {
+                if (event.ctrlKey && event.key == "z")
+                document.getElementById("undo-button").click();
+                event.preventDefault();
+            }
+        )
     </script>
 </body>
 </html>
