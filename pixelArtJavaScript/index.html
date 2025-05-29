@@ -29,6 +29,10 @@
                     tools.value = "rectangle";
                     tools.dispatchEvent(new Event("change"));
                     event.preventDefault();
+                } else if (event.key == "5") {
+                    tools.value = "pick";
+                    tools.dispatchEvent(new Event("change"));
+                    event.preventDefault();
                 } 
             }
         )
