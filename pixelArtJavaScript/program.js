@@ -82,8 +82,7 @@ class PictureCanvas {
 
 // Renders the changes to the Picture to visually reflect the pixel data
 function drawPicture(picture, canvas, scale, prevPicture) {
-    // canvas.width = picture.width * scale;
-    // canvas.height = picture.height * scale;
+    // Check if the height or width of the picture has changed.
     if (canvas.width !== picture.width * scale 
         || canvas.height !== picture.height * scale) 
         {
