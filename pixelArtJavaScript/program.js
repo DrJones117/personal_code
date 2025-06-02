@@ -257,6 +257,39 @@ function rectangle(start, state, dispatch) {
     return drawRectangle;
 }
 
+// Allows the user to click and drag to select a circular area of pixels (Similar to the rectangle tool)
+// Pushes each pixel and the color into an array that fills out the circular area. 
+function circle(start, state, dispatch) {
+    function drawCircle(pos) {
+        // Center is always the initial click
+        let xCenter = start.x;
+        let yCenter = start.y;
+
+        let radius = Math.round(Math.sqrt(Math.pow(pos.x - start.x, 2) + Math.pow(pos.y - start.y, 2)));
+        
+        let xStart = xCenter - radius;
+        let xEnd = xCenter + radius;
+        let yStart = yCenter - radius;
+        let yEnd = yCenter + radius;
+
+        let drawn = [];
+        for (let y = yStart; y <= yEnd; y++) {
+            for (let x = xStart; x <= xEnd; x++) {
+                let dx = x - xCenter;
+                let dy = y - yCenter;
+                let distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance <= radius) {
+                    // Only draw if inside the canvas bounds
+                    if (x >= 0 && x < state.picture.width && y >= 0 && y < state.picture.height) {
+                        drawn.push({x, y, color: state.color});
+                    }
+                }
+            }
+        }
+        dispatch({picture: state.picture.draw(drawn)});
+    }
+    return drawCircle;
+}
 
 // Defines the four directions adjacent to a given pixel.
 const around = [
@@ -446,7 +479,7 @@ const startState = {
 
 
 // Sets up the list of tools for the user.
-const baseTools = {draw, fill, rectangle, pick};
+const baseTools = {draw, fill, rectangle, circle, pick};
 
 
 // Sets up the list of UI controls for the user.
