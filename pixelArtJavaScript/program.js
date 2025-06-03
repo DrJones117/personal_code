@@ -1,5 +1,4 @@
 // ====== The State ==================================================
-// FOR THE GREEN BOX!!! OORAH!!!
 
 // Represents the area in which the user can draw.
 class Picture {
