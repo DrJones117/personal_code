@@ -110,18 +110,27 @@ PictureCanvas.prototype.mouse = function(downEvent, onDown) {
     let pos = pointerPosition(downEvent, this.dom);
     let onMove = onDown(pos);
     if (!onMove) return;
+    let lastPosition = pos;
     let move = moveEvent => {
         if (moveEvent.buttons == 0) {
             this.dom.removeEventListener("mousemove", move);
         } else {
-            let newPos = pointerPosition(moveEvent, this.dom);
-            if (newPos.x == pos.x && newPos.y == pos.y) return;
-            pos = newPos
-            onMove(newPos);
+            let newPosition = pointerPosition(moveEvent, this.dom);
+            if (newPosition.x == lastPosition.x) return;
+            let xDistance = newPosition.x - lastPosition.x;
+            let yDistance = newPosition.y - lastPosition.y;
+            let steps = Math.max(Math.abs(xDistance), Math.abs(yDistance));
+            for (let i = 1; i <= steps; i++) {
+                let x = Math.round(lastPosition.x + (xDistance * i) / steps);
+                let y = Math.round(lastPosition.y + (yDistance * i) / steps);
+                onMove({x, y});
+            }
+            lastPosition = newPosition;
         }
     };
     this.dom.addEventListener("mousemove", move);
 };
+
 
 // Calculates the position of the pixel where an event occurred.
 // (Were the user makes changes)
